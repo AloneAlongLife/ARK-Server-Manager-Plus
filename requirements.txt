@@ -1,0 +1,6 @@
+rcon
+flask
+orjson
+python-a2s
+opencc-python-reimplemented
+git+https://github.com/Pycord-Development/pycord.git
