@@ -9,6 +9,7 @@ class Dashboard():
         self.ark_queue: Queue = global_setting["queues"]["ARK"]
         self.log_queue: Queue = global_setting["queues"]["Log"]
         self.main: Queue = global_setting["queues"]["Main"]
+        self.config = config
 
     def run(
         self,

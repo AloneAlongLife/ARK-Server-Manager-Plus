@@ -1,6 +1,7 @@
 rcon
 flask
 orjson
+requests
 python-a2s
 opencc-python-reimplemented
 py-cord==2.0.0b3

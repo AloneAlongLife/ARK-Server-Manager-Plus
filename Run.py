@@ -3,7 +3,6 @@ from os.path import isdir, isfile, join
 from queue import Queue
 from time import sleep
 from datetime import timedelta
-from threading import ThreadError
 from subprocess import Popen, PIPE
 
 from modules import Thread, json, logger, input_t, backspace, thread_name
@@ -17,7 +16,13 @@ EXAMPLE_CONFIG = {
         "time_delta": 8
     },
     "ark_servers": {
-        "Server1": "C:\\asmdata\\Servers\\Server1"
+        "Server1": {
+            "path": "C:\\asmdata\\Servers\\Server1",
+            "port": 0,
+            "password": "",
+            "name": "",
+            "map_name": ""
+        }
     },
     "discord_bot": {
         "token": "",
@@ -56,9 +61,11 @@ def flask_job(*args, **kargs):
 
 def ark_job(*args, **kargs):
     asm = ARK_Server_Manager(*args, **kargs)
+    asm.run()
 
 def discord_job(*args, **kargs):
     bot = Custom_Client(*args, **kargs)
+    bot.run()
 
 def command_job(setting: dict):
     main_queue: Queue = setting["queues"]["Main"]
@@ -70,7 +77,8 @@ def command_job(setting: dict):
             main_queue.put(
                 {
                     "type": "command",
-                    "content": command
+                    "content": command,
+                    "thread": "command"
                 }
             )
             command = ""
@@ -136,19 +144,27 @@ if __name__ == "__main__":
     threads = {
         "log_thread": Thread(target=logger, name="Logger", args=(setting,)),
         "command_thread": Thread(target=command_job, name="Command", args=(setting,)),
-        "ARK_thread": Thread(target=flask_job, name="ARK", args=(setting, ARK_SERVER)),
-        "flask_thread": Thread(target=flask_job, name="Falsk", args=(setting, WEB_DASHBOARD))
+        "ARK_thread": Thread(target=ark_job, name="ARK", args=(setting, ARK_SERVER)),
+        "discord_thread": Thread(target=discord_job, name="discord", args=(setting, DISCORD_BOT)),
+        "web_thread": Thread(target=flask_job, name="web", args=(setting, WEB_DASHBOARD))
     }
     for thread in threads.values():
         thread.start()
 
     main_queue: Queue = setting["queues"]["Main"]
     log_queue: Queue = setting["queues"]["Log"]
+    ark_queue: Queue = setting["queues"]["ARK"]
     log_queue.put(f"{thread_name()}----------Start Up----------")
     log_queue.put(f"{thread_name()}Update...")
     git_pull = str(Popen("git pull", shell=True, stdout=PIPE).stdout.read())
     if "Already up to date" not in git_pull:
-        main_queue.put("restart")
+        main_queue.put(
+            {
+                "type": "command",
+                "content": "restart",
+                "thread": "main"
+            }
+        )
         log_queue.put(f"{thread_name()}Need to Restart.")
     log_queue.put(f"{thread_name()}Update Finish.")
     while True:
@@ -159,7 +175,16 @@ if __name__ == "__main__":
                 log_queue.put(f"{thread_name()}Receive Command: {command}")
         else:
             command = ""
-        if command == "restart":
+        
+        if command.startswith("$ark"):
+            ark_queue.put(
+                {
+                    "type": "command",
+                    "content": command.split(" ", 1),
+                    "thread": "main"
+                }
+            )
+        elif command == "restart":
             for thread in threads.values():
                 if thread.is_alive() and thread.name != "Logger":
                     thread.stop()
