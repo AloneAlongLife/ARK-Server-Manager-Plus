@@ -2,6 +2,7 @@ from datetime import datetime
 from queue import Queue
 from os.path import join, isdir
 from os import mkdir
+from time import sleep
 
 def logger(
     setting: dict
@@ -21,3 +22,4 @@ def logger(
             with open(join(LOG_DIR, file_name), mode="a", encoding="utf-8") as log_file:
                 log_file.write(f"{content}\n")
                 log_file.close()
+        sleep(0.05)

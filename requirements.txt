@@ -3,4 +3,4 @@ flask
 orjson
 python-a2s
 opencc-python-reimplemented
-git+https://github.com/Pycord-Development/pycord.git
+py-cord==2.0.0b3

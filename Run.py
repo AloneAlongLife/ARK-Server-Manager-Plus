@@ -1,9 +1,10 @@
-from os import makedirs
+from os import makedirs, system
 from os.path import isdir, isfile, join
 from queue import Queue
 from time import sleep
 from datetime import timedelta
 from threading import ThreadError
+from subprocess import Popen, PIPE
 
 from modules import Thread, json, logger, input_t, backspace, thread_name
 from ARK import ARK_Server_Manager
@@ -75,7 +76,14 @@ def command_job(setting: dict):
             command = ""
 
 if __name__ == "__main__":
-    
+    # 檢查是否有Git
+    git_version = str(Popen("git --version", shell=True, stdout=PIPE).stdout.read())
+    if "version" not in git_version.lower():
+        print("Git不存在")
+        print("請前往進行安裝")
+        print("按下Enter結束...")
+        input()
+        exit()
 
     # 讀取設置
     raw_config = config_reader()
@@ -137,11 +145,17 @@ if __name__ == "__main__":
     main_queue: Queue = setting["queues"]["Main"]
     log_queue: Queue = setting["queues"]["Log"]
     log_queue.put(f"{thread_name()}----------Start Up----------")
+    log_queue.put(f"{thread_name()}Update...")
+    git_pull = str(Popen("git pull", shell=True, stdout=PIPE).stdout.read())
+    if "Already up to date" not in git_pull:
+        main_queue.put("restart")
+        log_queue.put(f"{thread_name()}Need to Restart.")
+    log_queue.put(f"{thread_name()}Update Finish.")
     while True:
         if not main_queue.empty():
             queue_data: dict = main_queue.get()
             if queue_data.get("type") == "command":
-                command = queue_data.get("content")
+                command = queue_data.get("content").lower()
                 log_queue.put(f"{thread_name()}Receive Command: {command}")
         else:
             command = ""
@@ -154,8 +168,10 @@ if __name__ == "__main__":
                     thread.join()
             while not log_queue.empty():
                 sleep(0.1)
-            threads["Logger"].stop()
-            threads["Logger"].join()
+            threads["log_thread"].stop()
+            threads["log_thread"].join()
+            system("start cmd /c Start.cmd")
+            break
         elif command == "stop":
             for thread in threads.values():
                 if thread.is_alive() and thread.name != "Logger":
@@ -165,5 +181,6 @@ if __name__ == "__main__":
                     thread.join()
             while not log_queue.empty():
                 sleep(0.1)
-            threads["Logger"].stop()
-            threads["Logger"].join()
+            threads["log_thread"].stop()
+            threads["log_thread"].join()
+            break
