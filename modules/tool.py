@@ -2,6 +2,7 @@ import msvcrt, time, sys
 from threading import current_thread
 from subprocess import Popen, PIPE
 import requests
+from datetime import datetime, timedelta
 
 def get_ip():
     ip = requests.get('https://api.ipify.org').text
@@ -59,3 +60,8 @@ def process_info(name: str="") -> list | None:
     else:
         return None
 
+def now_time(delta: timedelta | float) -> datetime:
+    if type(delta) == timedelta:
+        return datetime.utcnow() + delta
+    else:
+        return datetime.utcnow() + timedelta(hours=delta)

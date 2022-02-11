@@ -68,14 +68,14 @@ class ARK_Server_Manager:
                             content_list = raw_chat.split("\n")
                             for string in [content for content in content_list if content != ""]:
                                 self.log_queue.put(f"{thread_name()}[RCON]{string}")
-                                string = CC.convert(string)
-                                if (not string.startswith(("SERVER:", "管理員指令"))) and ("has entered your zone." not in string): 
-                                    if string.startswith("部落"):
+                                conv_string = CC.convert(string)
+                                if (not conv_string.startswith(("SERVER:", "管理員指令"))) and ("has entered your zone." not in string): 
+                                    if conv_string.startswith("部落"):
                                         tribe = string[2:string.find(", ID ")]
                                         if string.find("\">") != -1: string = string[string.find("\">") + 2:-4]
                                         else: string = string.split(": ")[2][:-1]
-                                        if string[:6] == "部落成員 ": string = string[6:]
-                                        elif string[:5] == "你的部落":
+                                        if conv_string[:6] == "部落成員 ": string = string[6:]
+                                        elif conv_string[:5] == "你的部落":
                                             string = string[5:]
                                         string = f"<{tribe}>{string}"
                                     response.put(
