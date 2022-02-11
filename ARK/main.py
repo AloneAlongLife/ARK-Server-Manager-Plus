@@ -144,6 +144,7 @@ class ARK_Server_Manager:
                 },
                 "status": False,
                 "rcon": False,
+                "last_status": False,
                 "temp_thread": Thread()
             }
             data[key]["thread"] = Thread(target=self.rcon_session, name=data[key]["name"], args=(data[key]["config"], data[key]["queues"]["request"], data[key]["queues"]["response"]))
@@ -238,30 +239,37 @@ class ARK_Server_Manager:
                             value["rcon"] = False
                 if server_status(value["status"], value["rcon"]) != status:
                     sleep(10)
-                    new_status = server_status(value["status"], value["rcon"])
-                    status_message = ""
-                    if new_status == True:
-                        if status == False:
-                            status_message = f"[{value['name']}]伺服器已啟動。"
-                        else:
-                            status_message = f"[{value['name']}]伺服器已重新連線。"
-                    elif new_status == None:
-                        status_message = f"[{value['name']}]伺服器無回應。"
-                    elif new_status == False:
-                        status_message = f"[{value['name']}]伺服器已關閉。"
-                        while not value["queues"]["request"].empty():
-                            value["queues"]["request"].get()
-                    self.log_queue.put(f"{thread_name()}{status_message}")
-                    self.discord_queue.put(
-                        {
-                            "type": "admin-message",
-                            "content": {
-                                "message": status_message,
-                                "key": key,
-                                "display_name": value["name"]
-                            },
-                            "thread": "ark"
-                        }
-                    )
+                    if server_status(value["status"], value["rcon"]) != status:
+                        value["last_status"] = status
+                        last_status = value["last_status"]
+                        status = server_status(value["status"], value["rcon"])
+                        status_message = ""
+                        if status == True:
+                            if last_status == False:
+                                status_message = f"[{value['name']}]伺服器已啟動。"
+                            else:
+                                status_message = f"[{value['name']}]伺服器已重新連線。"
+                        elif status == None:
+                            if last_status == False:
+                                status_message = ""
+                            else:
+                                status_message = f"[{value['name']}]伺服器無回應。"
+                        elif status == False:
+                            status_message = f"[{value['name']}]伺服器已關閉。"
+                            while not value["queues"]["request"].empty():
+                                value["queues"]["request"].get()
+                        if status_message != "":
+                            self.log_queue.put(f"{thread_name()}{status_message}")
+                            self.discord_queue.put(
+                                {
+                                    "type": "admin-message",
+                                    "content": {
+                                        "message": status_message,
+                                        "key": key,
+                                        "display_name": value["name"]
+                                    },
+                                    "thread": "ark"
+                                }
+                            )
             sleep(0.05)
     # "C:\asmdata\Servers\Server3\ShooterGame\Binaries\Win64\ShooterGameServer.exe"
