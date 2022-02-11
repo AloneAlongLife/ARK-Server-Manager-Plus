@@ -68,6 +68,7 @@ class ARK_Server_Manager:
                             content_list = raw_chat.split("\n")
                             for string in [content for content in content_list if content != ""]:
                                 self.log_queue.put(f"{thread_name()}[RCON]{string}")
+                                string = CC.convert(string)
                                 if (not string.startswith(("SERVER:", "管理員指令"))) and ("has entered your zone." not in string): 
                                     if string.startswith("部落"):
                                         tribe = string[2:string.find(", ID ")]

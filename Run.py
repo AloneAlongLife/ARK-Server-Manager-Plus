@@ -96,6 +96,17 @@ def low_battery():
         message += f"[{name}]Server will auto shutdown because current battery is less than {GLOBAL_CONFIG['low_battery']}%"
         discord_queue.put(
             {
+                "type": "admin-message",
+                "content": {
+                    "message": f"低電量警告，當前電量:{BATTERY.percent}%",
+                    "key": key,
+                    "display_name": name
+                },
+                "thread": "main"
+            }
+        )
+        discord_queue.put(
+            {
                 "type": "message",
                 "content": {
                     "message": message,
@@ -107,6 +118,14 @@ def low_battery():
         )
         log_queue.put(message)
     sleep(5)
+    for key in ARK_SERVER.keys():
+        ark_queue.put(
+            {
+                "type": "command",
+                "content": f"{key} stop",
+                "thread": "main"
+            }
+        )
 
 if __name__ == "__main__":
     # 檢查是否有Git
