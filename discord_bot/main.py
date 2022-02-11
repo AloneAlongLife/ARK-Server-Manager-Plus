@@ -47,7 +47,7 @@ class Custom_Client(discord.client.Client):
         if message.author != self.user and message.channel.id in [id for id in self.config["chat_channel"].values()]:
             if message.content.startswith(f"{self.config['prefix']}c") and self.config["admin_role"] in [role.id for role in message.author.roles]:
                 command = message.content[3:]
-                key = self.config["chat_channel"].keys()[list(self.config["chat_channel"].values()).index(message.channel.id)]
+                key = list(self.config["chat_channel"].keys())[list(self.config["chat_channel"].values()).index(message.channel.id)]
                 self.ark_queue.put(
                     {
                         "type": "command",

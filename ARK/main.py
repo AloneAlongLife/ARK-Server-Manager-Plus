@@ -179,6 +179,8 @@ class ARK_Server_Manager:
                     value["status"] = is_alive(value["path"])
                 if not value["queues"]["response"].empty():
                     queue_data = value["queues"]["response"].get()
+                    print(queue_data)
+                    print(status)
                     if queue_data["type"] == "command-reply":
                         if queue_data["thread"] == "main":
                             pass
