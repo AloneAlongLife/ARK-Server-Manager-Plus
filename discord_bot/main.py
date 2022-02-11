@@ -14,11 +14,10 @@ class Custom_Client(discord.client.Client):
         self.config = config
 
     async def on_ready(self):
-        print(thread_name())
         for channel_id in self.config["chat_channel"].values():
             self.channel = self.get_channel(channel_id)
             await self.channel.send("Bot啟動完成")
-            print("Bot啟動完成")
+            self.log_queue.put(f"{thread_name()}Bot啟動完成")
 
         self.loop.create_task(self.request_bk())
 
