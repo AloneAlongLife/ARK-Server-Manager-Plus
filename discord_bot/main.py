@@ -10,6 +10,8 @@ class Custom_Client(discord.client.Client):
         self.log_queue: Queue = global_setting["queues"]["Log"]
         self.main: Queue = global_setting["queues"]["Main"]
         self.config = config
+        print(args)
+        print(kargs)
         super().__init__(*args, **kargs)
 
     async def on_ready(self):
