@@ -101,8 +101,7 @@ class ARK_Server_Manager:
 
     def stop(self, config, server, times=5, restart=False):
         for i in range(times):
-            message = f"""[{config['name']}]伺服器將於{times-i}分鐘後{['關閉', '重啟'][restart]}。
-            [{config['name']}]Server will {['shutdown', 'restart'][restart]} in {times-i} min."""
+            message = f"""[{config['name']}]伺服器將於{times-i}分鐘後{['關閉', '重啟'][restart]}。\n[{config['name']}]Server will {['shutdown', 'restart'][restart]} in {times-i} min."""
             self.discord_queue.put({"type": "message", "content": {"message": message, "key": server, "display_name": config["name"]}, "thread": "ark"})
             config["queues"]["request"].put({"type": "command", "content": f"Broadcast {message}"})
             sleep(60)
@@ -181,16 +180,16 @@ class ARK_Server_Manager:
                 if not value["queues"]["response"].empty():
                     queue_data = value["queues"]["response"].get()
                     if queue_data["type"] == "command-reply":
-                        if queue_data["thread"] == "main":
+                        if queue_data.get("thread") == "main":
                             pass
-                        elif queue_data["thread"] == "discord":
+                        elif queue_data.get("thread") == "discord":
                             queue_data["content"] = {
                                 "message": queue_data["content"],
                                 "key": key,
                                 "display_name": value["name"]
                             }
                             self.discord_queue.put(queue_data)
-                        elif queue_data["thread"] == "web":
+                        elif queue_data.get("thread") == "web":
                             self.web_queue.put(queue_data)
                     elif queue_data["type"] == "chat":
                         message = f"[{value['name']}]{queue_data['content']}"
