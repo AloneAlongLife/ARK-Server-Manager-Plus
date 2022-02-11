@@ -4,7 +4,8 @@
     "time_delta": 8,
     "low_battery": 20,
     "restart_time": [
-      
+      ["00:00:00", "00:01:00"],
+      ["12:00:00", "12:01:00"]
     ]
   },
   "ark_servers": {
