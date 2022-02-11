@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 from os import makedirs, system
 from os.path import isdir, isfile, join
 from queue import Queue
@@ -129,14 +129,14 @@ def low_battery():
             }
         )
 
-def auto_restart() -> bool:
+def auto_restart(before: time=time(minute=5)) -> bool:
     result = []
     for time_data in GLOBAL_CONFIG["restart_time"]:
-        start_time = datetime.strptime(time_data[0], "%H:%M:%S")
-        end_time = datetime.strptime(time_data[1], "%H:%M:%S")
-        if now_time(TIME_DELTA) > start_time and now_time(TIME_DELTA) < end_time and not restarting:
+        start_time = datetime.strptime(time_data[0], "%H:%M:%S").time()
+        end_time = datetime.strptime(time_data[1], "%H:%M:%S").time()
+        if now_time(TIME_DELTA).time() > start_time and now_time(TIME_DELTA).time() < end_time and not restarting:
             result.append(True)
-        elif now_time(TIME_DELTA) > start_time and now_time(TIME_DELTA) < end_time and restarting:
+        elif now_time(TIME_DELTA).time() > start_time and now_time(TIME_DELTA).time() < end_time and restarting:
             result.append(None)
         else:
             result.append(False)
