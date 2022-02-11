@@ -212,11 +212,11 @@ if __name__ == "__main__":
                         thread.stop()
                 for thread in threads.values():
                     if thread.name != "Logger":
-                        thread.join(timeout=1)
+                        thread.join(timeout=3)
                 while not log_queue.empty():
                     sleep(0.1)
                 threads["log_thread"].stop()
-                threads["log_thread"].join(timeout=1)
+                threads["log_thread"].join(timeout=3)
                 if True not in [thread.is_alive() for thread in threads.values()]:
                     break
             break
