@@ -69,14 +69,10 @@ def ark_job(*args, **kargs):
     asm.run()    
 
 def discord_job(bot):
-    try:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.create_task(bot.run())
         loop.run_forever()
-    except RuntimeError:
-        loop.stop()
-        loop.close()
 
 
 def command_job(setting: dict):
@@ -339,5 +335,4 @@ if __name__ == "__main__":
         restarting = auto_restart()
 
         sleep(0.05)
-    print("Close.")
     exit()
