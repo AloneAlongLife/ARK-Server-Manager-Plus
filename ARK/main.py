@@ -8,6 +8,7 @@ from os import system, makedirs
 from shutil import copyfile
 from datetime import datetime
 
+BACKSLASH = "\\"
 CC = OpenCC("s2tw")
 
 def is_alive(path: str) -> bool:
@@ -111,13 +112,13 @@ class ARK_Server_Manager:
         config["queues"]["request"].put({"type": "command", "content": f"DoExit"})
         while is_alive(config["path"]):
             sleep(10)
-        if not isdir(f"{join(config['path'], 'ShooterGame\\Backup\\SavedArks')}"):
+        if not isdir(join(config['path'], 'ShooterGame\\Backup\\SavedArks')):
             makedirs(join(config['path'], 'ShooterGame\\Backup\\SavedArks'))
-        save_path = join(config["path"], f"ShooterGame\\Saved\\SavedArks\\{config['map_name']}.ark")
-        backup_path = join(config["path"], f"ShooterGame\\Backup\\SavedArks\\{config['map_name']}_{self.timestamp()}.ark")
+        save_path = join(config["path"], f"ShooterGame{BACKSLASH}Saved{BACKSLASH}SavedArks{BACKSLASH}{config['map_name']}.ark")
+        backup_path = join(config["path"], f"ShooterGame{BACKSLASH}Backup{BACKSLASH}SavedArks{BACKSLASH}{config['map_name']}_{self.timestamp()}.ark")
         copyfile(save_path, backup_path)
         if restart:
-            system(f"start cmd /c \"{join(config['path'], 'ShooterGame\\Saved\\Config\\WindowsServer\\RunServer.cmd')}\"")
+            system("start cmd /c \"" + join(config['path'], 'ShooterGame\\Saved\\Config\\WindowsServer\\RunServer.cmd') + "\"")
 
     def run(self):
         ip = get_ip()
@@ -159,7 +160,7 @@ class ARK_Server_Manager:
                         value = data[target]
                         if command == "start":
                             if not is_alive(value["path"]) and not value["temp_thread"].is_alive():
-                                system(f"start cmd /c \"{join(value['path'], 'ShooterGame\\Saved\\Config\\WindowsServer\\RunServer.cmd')}\"")
+                                system("start cmd /c \"" + join(value['path'], 'ShooterGame\\Saved\\Config\\WindowsServer\\RunServer.cmd') + "\"")
                         elif command == "restart":
                             if is_alive(value["path"]) and not value["temp_thread"].is_alive():
                                 value["temp_thread"] = Thread(target=self.stop, name=f"ARK-temp-thread-{target}", args=(value, target, 5, True))
