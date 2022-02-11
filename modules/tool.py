@@ -40,8 +40,7 @@ def thread_name() -> str:
     return f"[{current_thread().name.replace('Thread', '').capitalize()} Thread]"
 
 def process_info(name: str="") -> list | None:
-    raw_info = Popen(f"wmic process where name=\"{name}\" get name, executablepath, processid", shell=True, stdout=PIPE).stdout.read().decode("utf-8").split("\r\r\n")
-    print(raw_info)
+    raw_info = Popen(f"wmic process where name=\"{name}\" get name, executablepath, processid", shell=True, stdout=PIPE).stdout.read().decode("utf-8").split("\r\r\n")[:-2]
     if "ExecutablePath" in raw_info[0] and "Name" in raw_info[0] and "ProcessId" in raw_info[0]:
         s_path = raw_info[0].find("ExecutablePath")
         s_name = raw_info[0].find("Name")
