@@ -185,27 +185,33 @@ if __name__ == "__main__":
                 }
             )
         elif command == "restart":
-            for thread in threads.values():
-                if thread.is_alive() and thread.name != "Logger":
-                    thread.stop()
-            for thread in threads.values():
-                if thread.name != "Logger":
-                    thread.join()
-            while not log_queue.empty():
-                sleep(0.1)
-            threads["log_thread"].stop()
-            threads["log_thread"].join()
+            while True:
+                for thread in threads.values():
+                    if thread.is_alive() and thread.name != "Logger":
+                        thread.stop()
+                for thread in threads.values():
+                    if thread.name != "Logger":
+                        thread.join(timeout=1)
+                while not log_queue.empty():
+                    sleep(0.1)
+                threads["log_thread"].stop()
+                threads["log_thread"].join(timeout=1)
+                if True not in [thread.is_alive() for thread in threads.values()]:
+                    break
             system("start cmd /c Start.cmd")
             break
         elif command == "stop":
-            for thread in threads.values():
-                if thread.is_alive() and thread.name != "Logger":
-                    thread.stop()
-            for thread in threads.values():
-                if thread.name != "Logger":
-                    thread.join()
-            while not log_queue.empty():
-                sleep(0.1)
-            threads["log_thread"].stop()
-            threads["log_thread"].join()
+            while True:
+                for thread in threads.values():
+                    if thread.is_alive() and thread.name != "Logger":
+                        thread.stop()
+                for thread in threads.values():
+                    if thread.name != "Logger":
+                        thread.join(timeout=1)
+                while not log_queue.empty():
+                    sleep(0.1)
+                threads["log_thread"].stop()
+                threads["log_thread"].join(timeout=1)
+                if True not in [thread.is_alive() for thread in threads.values()]:
+                    break
             break
