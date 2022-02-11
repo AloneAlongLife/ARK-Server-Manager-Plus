@@ -84,6 +84,8 @@ class ARK_Server_Manager:
                                         }
                                     )
                         sleep(0.05)
+            except SystemExit:
+                break
             except:
                 response.put(
                     {
