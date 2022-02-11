@@ -176,12 +176,10 @@ class ARK_Server_Manager:
             for key in data.keys():
                 value = data[key]
                 status = server_status(value["status"], value["rcon"])
-                print(f"{key}:{status}")
                 if is_alive(value["path"]) != value["status"]:
                     value["status"] = is_alive(value["path"])
                 if not value["queues"]["response"].empty():
                     queue_data = value["queues"]["response"].get()
-                    print(queue_data)
                     if queue_data["type"] == "command-reply":
                         if queue_data["thread"] == "main":
                             pass
