@@ -91,7 +91,8 @@ class ARK_Server_Manager:
                 self.log_queue.put(f"{thread_name()}[RCON]RCON Disconnected.")
                 while True:
                     try:
-                        Client(config["ip"], config["port"], timeout=5).connect()
+                        with Client(config["ip"], config["port"], timeout=5, passwd=config["password"]) as client:
+                            pass
                         break
                     except:
                         sleep(0.05)
