@@ -15,7 +15,7 @@ def logger(
     while True:
         log_queue: Queue = setting["queues"]["Log"]
         if not log_queue.empty():
-            time: datetime = now_time()
+            time: datetime = now_time(setting["time_delta"])
             file_name = time.strftime('%Y-%m-%d.txt')
             time_stamp = time.strftime('[%H:%M:%S]')
             content = f"{time_stamp}{log_queue.get()}"

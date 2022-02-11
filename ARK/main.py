@@ -74,9 +74,8 @@ class ARK_Server_Manager:
                                         tribe = string[2:string.find(", ID ")]
                                         if string.find("\">") != -1: string = string[string.find("\">") + 2:-4]
                                         else: string = string.split(": ")[2][:-1]
-                                        if conv_string[:6] == "部落成員 ": string = string[6:]
-                                        elif conv_string[:5] == "你的部落":
-                                            string = string[5:]
+                                        if conv_string.startswith("部落成員 "): string = string[5:]
+                                        if conv_string.startswith("你的部落"): string = string[4:]
                                         string = f"<{tribe}>{string}"
                                     response.put(
                                         {
@@ -196,7 +195,7 @@ class ARK_Server_Manager:
                         elif queue_data.get("thread") == "web":
                             self.web_queue.put(queue_data)
                     elif queue_data["type"] == "chat":
-                        message = f"{value['name']}{queue_data['content']}"
+                        message = f"[{value['name']}]{queue_data['content']}"
                         self.log_queue.put(message)
                         self.discord_queue.put(
                             {

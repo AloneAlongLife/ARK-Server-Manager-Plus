@@ -1,15 +1,17 @@
-from os import makedirs, system
 import asyncio
+from datetime import datetime, timedelta
+from os import makedirs, system
 from os.path import isdir, isfile, join
 from queue import Queue
+from subprocess import PIPE, Popen
 from time import sleep
-from datetime import timedelta
-from subprocess import Popen, PIPE
+
 import psutil
 
-from modules import Thread, json, logger, input_t, backspace, thread_name
 from ARK import ARK_Server_Manager
 from discord_bot import Custom_Client
+from modules import (Thread, backspace, input_t, json, logger, now_time,
+                     thread_name)
 from web import Dashboard
 
 EXAMPLE_CONFIG = {
@@ -127,6 +129,32 @@ def low_battery():
             }
         )
 
+def auto_restart() -> bool:
+    result = []
+    for time_data in GLOBAL_CONFIG["restart_time"]:
+        start_time = datetime.strptime(time_data[0], "%H:%M:%S")
+        end_time = datetime.strptime(time_data[1], "%H:%M:%S")
+        if now_time(TIME_DELTA) > start_time and now_time(TIME_DELTA) < end_time and not restarting:
+            result.append(True)
+        elif now_time(TIME_DELTA) > start_time and now_time(TIME_DELTA) < end_time and restarting:
+            result.append(None)
+        else:
+            result.append(False)
+    if True in result:
+        for key in ARK_SERVER.keys():
+            ark_queue.put(
+                {
+                    "type": "command",
+                    "content": f"{key} restart",
+                    "thread": "main"
+                }
+            )
+        return True
+    elif None in result:
+        return True
+    else:
+        return False
+
 if __name__ == "__main__":
     # 檢查是否有Git
     git_version = str(Popen("git --version", shell=True, stdout=PIPE).stdout.read())
@@ -141,6 +169,7 @@ if __name__ == "__main__":
     raw_config = config_reader()
     file_exist = raw_config[0]
     config = raw_config[1]
+    restarting = False
 
     # 如果設置不存在，則提醒並終止程式
     if not file_exist:
@@ -268,5 +297,9 @@ if __name__ == "__main__":
         if BATTERY != None:
             if BATTERY.percent <= GLOBAL_CONFIG["low_battery"]:
                 low_battery()
+        
+        restarting = auto_restart()
 
         sleep(0.05)
+    print("Close.")
+    exit()
