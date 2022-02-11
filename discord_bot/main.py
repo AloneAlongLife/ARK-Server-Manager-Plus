@@ -25,8 +25,7 @@ class Custom_Client(discord.client.Client):
         while True:
             if not self.self_queue.empty():
                 queue_data = self.self_queue.get()
-                print(queue_data)
-                if queue_data.get("key") in self.config["chat_channel"].keys():
+                if queue_data["content"].get("key") in self.config["chat_channel"].keys():
                     channel = self.get_channel(self.config["chat_channel"][queue_data["content"]["key"]])
                     display_name = queue_data["content"]["display_name"]
                     raw_message = queue_data["content"]["message"]
