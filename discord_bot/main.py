@@ -4,13 +4,13 @@ import asyncio
 
 class Custom_Client(discord.client.Client):
     def __init__(self, global_setting, config, *args, **kargs) -> None:
-        super().__init__(*args, **kargs)
         self.self_queue: Queue = global_setting["queues"]["Discord"]
         self.ark_queue: Queue = global_setting["queues"]["ARK"]
         self.web_queue: Queue = global_setting["queues"]["Web"]
         self.log_queue: Queue = global_setting["queues"]["Log"]
         self.main: Queue = global_setting["queues"]["Main"]
         self.config = config
+        super().__init__(*args, **kargs)
 
     async def on_ready(self):
         for channel_id in self.config["chat_channel"].values():
