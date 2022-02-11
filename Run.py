@@ -281,14 +281,31 @@ if __name__ == "__main__":
         elif command == "stop":
             while True:
                 for thread in threads.values():
-                    if thread.is_alive() and thread.name != "Logger":
+                    if thread.is_alive() and thread.name != "Logger" and thread.name != "ARK":
                         thread.stop()
                 for thread in threads.values():
-                    if thread.name != "Logger":
+                    if thread.name != "Logger" and thread.name != "ARK":
                         thread.join(timeout=3)
+                ark_queue.put(
+                    {
+                        "type": "system",
+                        "content": "stop",
+                        "thread": "main"
+                    }
+                )
+                while True:
+                    data = main_queue.get()
+                    if data.get("thread") == "ark":
+                        if data.get("content") == "thread stopped":
+                            break
+                    sleep(0.05)
                 while not log_queue.empty():
                     sleep(0.1)
-                threads["log_thread"].stop()
+                if threads["ARK_thread"].is_alive():
+                    threads["ARK_thread"].stop()
+                threads["ARK_thread"].join(timeout=3)
+                if threads["log_thread"].is_alive():
+                    threads["log_thread"].stop()
                 threads["log_thread"].join(timeout=3)
                 if True not in [thread.is_alive() for thread in threads.values()]:
                     break

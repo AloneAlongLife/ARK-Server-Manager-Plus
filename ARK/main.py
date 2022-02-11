@@ -175,6 +175,24 @@ class ARK_Server_Manager:
                         else:
                             queue_data["content"] = command
                             value["queues"]["request"].put(queue_data)
+                elif queue_data["type"] == "system":
+                    if queue_data["content"] == "stop":
+                        while True:
+                            for thread in [value["thread"] for value in data.values()] + [value["temp_thread"] for value in data.values()]:
+                                if thread.is_alive():
+                                    thread.stop()
+                            for thread in [value["thread"] for value in data.values()] + [value["temp_thread"] for value in data.values()]:
+                                thread.join(timeout=1)
+                            if True not in [thread.is_alive() for thread in [value["thread"] for value in data.values()] + [value["temp_thread"] for value in data.values()]]:
+                                break
+                            sleep(0.05)
+                        self.main.put(
+                            {
+                                "type": "system",
+                                "content": "thread stopped",
+                                "thread": "ark"
+                            }
+                        )
             for key in data.keys():
                 value = data[key]
                 status = server_status(value["status"], value["rcon"])
