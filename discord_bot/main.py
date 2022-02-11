@@ -45,6 +45,7 @@ class Custom_Client(discord.client.Client):
 
     async def on_message(self, message: discord.Message):
         if message.author != self.user and message.channel.id in [id for id in self.config["chat_channel"].values()]:
+            self.log_queue.put(f"{thread_name()}Receive Message: {message.content}")
             if message.content.startswith(f"{self.config['prefix']}c") and self.config["admin_role"] in [role.id for role in message.author.roles]:
                 command = message.content[3:]
                 key = list(self.config["chat_channel"].keys())[list(self.config["chat_channel"].values()).index(message.channel.id)]
