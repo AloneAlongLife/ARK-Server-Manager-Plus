@@ -1,5 +1,6 @@
 rcon
 flask
+psutil
 orjson
 requests
 python-a2s

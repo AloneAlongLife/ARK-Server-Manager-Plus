@@ -47,13 +47,14 @@ def process_info(name: str="") -> list | None:
         s_pid = raw_info[0].find("ProcessId")
         result = []
         for i in range(1, len(raw_info)):
-            result.append(
-                {
-                    "Path": raw_info[i][s_path:s_name - 2],
-                    "Name": raw_info[i][s_name:s_pid - 2],
-                    "PID": int(raw_info[i][s_pid:].replace(" ", "")),
-                }
-            )
+            if raw_info[i][s_pid:].replace(" ", "") != "":
+                result.append(
+                    {
+                        "Path": raw_info[i][s_path:s_name - 2],
+                        "Name": raw_info[i][s_name:s_pid - 2],
+                        "PID": int(raw_info[i][s_pid:].replace(" ", "")),
+                    }
+                )
         return result
     else:
         return None

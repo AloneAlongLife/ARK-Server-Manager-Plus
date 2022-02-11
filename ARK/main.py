@@ -7,6 +7,7 @@ from os.path import join, abspath, isdir
 from os import system, makedirs
 from shutil import copyfile
 from datetime import datetime
+from psutil import Process
 
 BACKSLASH = "\\"
 CC = OpenCC("s2tw")
@@ -14,7 +15,7 @@ CC = OpenCC("s2tw")
 def is_alive(path: str) -> bool:
     alive_list = process_info("ShooterGameServer.exe")
     if alive_list != None:
-        return join(abspath(path), "ShooterGame\\Binaries\\Win64\\ShooterGameServer.exe") in [data.get("Path") for data in alive_list]
+        return join(abspath(path), "ShooterGame\\Binaries\\Win64\\ShooterGameServer.exe") in [Process(data.get("PID")).exe() for data in alive_list]
     else:
         return False
 
