@@ -101,11 +101,11 @@ class ARK_Server_Manager:
         for i in range(times):
             message = f"""[{config['name']}]伺服器將於{times-i}分鐘後{['關閉', '重啟'][restart]}。
             [{config['name']}]Server will {['shutdown', 'restart'][restart]} in {times-i} min."""
-            self.discord_queue.put({"type": "message", "content": {"message": message, "name": server, "display_name": config["name"]}, "thread": "ark"})
+            self.discord_queue.put({"type": "message", "content": {"message": message, "key": server, "display_name": config["name"]}, "thread": "ark"})
             config["queues"]["request"].put({"type": "command", "content": f"Broadcast {message}"})
             sleep(60)
         message = f"[{config['name']}]儲存中...\n[{config['name']}]Saving..."
-        self.discord_queue.put({"type": "message", "content": {"message": message, "name": server, "display_name": config["name"]}, "thread": "ark"})
+        self.discord_queue.put({"type": "message", "content": {"message": message, "key": server, "display_name": config["name"]}, "thread": "ark"})
         config["queues"]["request"].put({"type": "command", "content": f"Broadcast {message}"})
         config["queues"]["request"].put({"type": "command", "content": "DestroyWildDinos"})
         config["queues"]["request"].put({"type": "command", "content": f"DoExit"})
@@ -145,7 +145,6 @@ class ARK_Server_Manager:
         while True:
             if not self.self_queue.empty():
                 queue_data: dict = self.self_queue.get()
-                self.log_queue.put(f"{thread_name()}Receive Command: {command}")
                 if queue_data["type"] == "command":
                     target = queue_data["content"].split(" ")[0]
                     if target not in data.keys():
@@ -156,6 +155,7 @@ class ARK_Server_Manager:
                                 break
                     if target in data.keys():
                         command = queue_data["content"].replace(f"{target} ", "")
+                        self.log_queue.put(f"{thread_name()}Receive Command: {command}")
                         value = data[target]
                         if command == "start":
                             if not is_alive(value["path"]) and not value["temp_thread"].is_alive():
@@ -182,6 +182,11 @@ class ARK_Server_Manager:
                         if queue_data["thread"] == "main":
                             pass
                         elif queue_data["thread"] == "discord":
+                            queue_data["content"] = {
+                                "message": queue_data["content"],
+                                "key": key,
+                                "display_name": value["name"]
+                            }
                             self.discord_queue.put(queue_data)
                         elif queue_data["thread"] == "web":
                             self.web_queue.put(queue_data)
@@ -193,7 +198,7 @@ class ARK_Server_Manager:
                                 "type": "message",
                                 "content": {
                                     "message": message,
-                                    "name": key,
+                                    "key": key,
                                     "display_name": value["name"]
                                 },
                                 "thread": "ark"
@@ -221,7 +226,7 @@ class ARK_Server_Manager:
                             "type": "admin-message",
                             "content": {
                                 "message": status_message,
-                                "name": key,
+                                "key": key,
                                 "display_name": value["name"]
                             },
                             "thread": "ark"
