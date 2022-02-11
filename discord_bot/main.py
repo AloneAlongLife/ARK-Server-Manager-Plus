@@ -19,7 +19,6 @@ class Custom_Client(discord.client.Client):
             print("Bot啟動完成")
 
         self.loop.create_task(self.request_bk())
-        self.loop.create_task(self.response_bk())
 
     async def request_bk(self):
         while True:
@@ -35,7 +34,7 @@ class Custom_Client(discord.client.Client):
                             message = raw_message[raw_message.find(")")+3:]
                         else:
                             user = "System"
-                            massage = raw_message
+                            message = raw_message
                         await channel.send(f"[{display_name}][{user}]:{message}")
                     if queue_data["type"] == "admin-message":
                         await channel.send(f"<@&{self.config['admin_role']}>{raw_message}")
