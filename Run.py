@@ -129,7 +129,7 @@ def low_battery():
             }
         )
 
-def auto_restart(before: timedelta=timedelta(minute=5)) -> bool:
+def auto_restart(before: timedelta=timedelta(minutes=5)) -> bool:
     result = []
     for time_data in GLOBAL_CONFIG["restart_time"]:
         start_time = (datetime.strptime(time_data[0], "%H:%M:%S") - before).time()
