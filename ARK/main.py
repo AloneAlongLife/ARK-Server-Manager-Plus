@@ -54,8 +54,8 @@ class ARK_Server_Manager:
                             data = request.get()
                             if data["type"] == "command":
                                 command = data["content"]
-                                resp = client.run(command)
                                 self.log_queue.put(f"{thread_name()}[RCON]Receive Command: {command}")
+                                resp = client.run(command)
                                 self.log_queue.put(f"{thread_name()}[RCON]Command Reply: {resp}")
                             data["type"] = "command-reply"
                             data["content"] = resp
