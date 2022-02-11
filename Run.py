@@ -64,8 +64,7 @@ def ark_job(*args, **kargs):
     asm = ARK_Server_Manager(*args, **kargs)
     asm.run()    
 
-def discord_job(*args, **kargs):
-    bot = Custom_Client(*args, **kargs)
+def discord_job(bot):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.create_task(bot.run())
@@ -146,11 +145,12 @@ if __name__ == "__main__":
     }
 
     # 產生各分支線程
+    bot = Custom_Client(setting, DISCORD_BOT)
     threads = {
         "log_thread": Thread(target=logger, name="Logger", args=(setting,)),
         "command_thread": Thread(target=command_job, name="Command", args=(setting,)),
         "ARK_thread": Thread(target=ark_job, name="ARK", args=(setting, ARK_SERVER)),
-        "discord_thread": Thread(target=discord_job, name="discord", args=(setting, DISCORD_BOT)),
+        "discord_thread": Thread(target=discord_job, name="discord", args=(bot,)),
         "web_thread": Thread(target=flask_job, name="web", args=(setting, WEB_DASHBOARD))
     }
     for thread in threads.values():
