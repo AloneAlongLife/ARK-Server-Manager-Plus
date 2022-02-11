@@ -237,6 +237,7 @@ class ARK_Server_Manager:
                         elif queue_data["content"] == "disconnect":
                             value["rcon"] = False
                 if server_status(value["status"], value["rcon"]) != status:
+                    sleep(10)
                     new_status = server_status(value["status"], value["rcon"])
                     status_message = ""
                     if new_status == True:
