@@ -182,7 +182,10 @@ class ARK_Server_Manager:
                                 if thread.is_alive():
                                     thread.stop()
                             for thread in [value["thread"] for value in data.values()] + [value["temp_thread"] for value in data.values()]:
-                                thread.join(timeout=1)
+                                try:
+                                    thread.join(timeout=1)
+                                except RuntimeError:
+                                    pass
                             if True not in [thread.is_alive() for thread in [value["thread"] for value in data.values()] + [value["temp_thread"] for value in data.values()]]:
                                 break
                             sleep(0.05)
