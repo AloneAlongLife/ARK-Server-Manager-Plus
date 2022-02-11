@@ -5,6 +5,7 @@ from queue import Queue
 from time import sleep
 from datetime import timedelta
 from subprocess import Popen, PIPE
+import psutil
 
 from modules import Thread, json, logger, input_t, backspace, thread_name
 from ARK import ARK_Server_Manager
@@ -14,7 +15,8 @@ from web import Dashboard
 EXAMPLE_CONFIG = {
     "global_config": {
         "data_dir": "data",
-        "time_delta": 8
+        "time_delta": 8,
+        "low_battery": 20
     },
     "ark_servers": {
         "Server1": {
@@ -87,6 +89,25 @@ def command_job(setting: dict):
             )
             command = ""
 
+def low_battery():
+    for key in ARK_SERVER.keys():
+        name = ARK_SERVER[key]["name"]
+        message = f"[{name}]伺服器當前電量低於{GLOBAL_CONFIG['low_battery']}%，即將自動關閉。\n"
+        message += f"[{name}]Server will auto shutdown because current battery is less than {GLOBAL_CONFIG['low_battery']}%"
+        discord_queue.put(
+            {
+                "type": "message",
+                "content": {
+                    "message": message,
+                    "key": key,
+                    "display_name": name
+                },
+                "thread": "main"
+            }
+        )
+        log_queue.put(message)
+    sleep(5)
+
 if __name__ == "__main__":
     # 檢查是否有Git
     git_version = str(Popen("git --version", shell=True, stdout=PIPE).stdout.read())
@@ -112,10 +133,10 @@ if __name__ == "__main__":
 
     # 如果設置檔內容有誤，則提醒並終止程式
     try:
-        GLOBAL_CONFIG = config["global_config"]
-        ARK_SERVER = config["ark_servers"]
-        DISCORD_BOT = config["discord_bot"]
-        WEB_DASHBOARD = config["web_dashboard"]
+        GLOBAL_CONFIG: dict = config["global_config"]
+        ARK_SERVER: dict = config["ark_servers"]
+        DISCORD_BOT: dict = config["discord_bot"]
+        WEB_DASHBOARD: dict = config["web_dashboard"]
     except KeyError:
         print("設置檔內容有誤")
         print("請前往更新設置檔: config.json")
@@ -125,6 +146,9 @@ if __name__ == "__main__":
 
     # 設置時區偏差
     TIME_DELTA = timedelta(hours=GLOBAL_CONFIG["time_delta"])
+
+    # 電池
+    BATTERY = psutil.sensors_battery()
 
     # 產生儲存資料的資料夾
     DATA_PATH = GLOBAL_CONFIG["data_dir"].replace("\\", "/")
@@ -159,6 +183,7 @@ if __name__ == "__main__":
     main_queue: Queue = setting["queues"]["Main"]
     log_queue: Queue = setting["queues"]["Log"]
     ark_queue: Queue = setting["queues"]["ARK"]
+    discord_queue: Queue = setting["queues"]["Discord"]
     log_queue.put(f"{thread_name()}----------Start Up----------")
     log_queue.put(f"{thread_name()}Update...")
     git_pull = str(Popen("git pull", shell=True, stdout=PIPE).stdout.read())
@@ -220,3 +245,9 @@ if __name__ == "__main__":
                 if True not in [thread.is_alive() for thread in threads.values()]:
                     break
             break
+
+        if BATTERY != None:
+            if BATTERY.percent <= GLOBAL_CONFIG["low_battery"]:
+                low_battery()
+
+        sleep(0.05)

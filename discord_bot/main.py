@@ -36,10 +36,12 @@ class Custom_Client(discord.client.Client):
                         else:
                             user = "System"
                             message = raw_message
+                        message.replace(f"[{display_name}]", "")
                         await channel.send(f"[{display_name}][{user}]:{message}")
                     if queue_data["type"] == "admin-message":
                         await channel.send(f"<@&{self.config['admin_role']}>{raw_message}")
                     elif queue_data["type"] == "command-reply":
+                        message.replace(f"[{display_name}]", "")
                         await queue_data["user"].send(f"[{display_name}]{raw_message}")
             await asyncio.sleep(0.05)
 

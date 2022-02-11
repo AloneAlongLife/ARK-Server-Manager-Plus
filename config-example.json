@@ -1,7 +1,8 @@
 {
   "global_config": {
     "data_dir": "data",
-    "time_delta": 8
+    "time_delta": 8,
+    "low_battery": 20
   },
   "ark_servers": {
     "Server1": {

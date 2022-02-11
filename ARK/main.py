@@ -7,7 +7,7 @@ from os.path import join, abspath, isdir
 from os import system, makedirs
 from shutil import copyfile
 from datetime import datetime
-from psutil import Process
+from psutil import Process, NoSuchProcess
 
 BACKSLASH = "\\"
 CC = OpenCC("s2tw")
@@ -15,7 +15,10 @@ CC = OpenCC("s2tw")
 def is_alive(path: str) -> bool:
     alive_list = process_info("ShooterGameServer.exe")
     if alive_list != None:
-        return join(abspath(path), "ShooterGame\\Binaries\\Win64\\ShooterGameServer.exe") in [Process(data.get("PID")).exe() for data in alive_list]
+        try:
+            return join(abspath(path), "ShooterGame\\Binaries\\Win64\\ShooterGameServer.exe") in [Process(data.get("PID")).exe() for data in alive_list]
+        except NoSuchProcess:
+            return False
     else:
         return False
 
@@ -56,7 +59,7 @@ class ARK_Server_Manager:
                                 command = data["content"]
                                 self.log_queue.put(f"{thread_name()}[RCON]Receive Command: {command}")
                                 resp = client.run(command)
-                                self.log_queue.put(f"{thread_name()}[RCON]Command Reply: {resp}")
+                                self.log_queue.put(f"{thread_name()}[RCON]Command Reply To \"{command}\": {resp}")
                             data["type"] = "command-reply"
                             data["content"] = resp
                             response.put(data)
@@ -92,8 +95,7 @@ class ARK_Server_Manager:
                 while True:
                     try:
                         with Client(config["ip"], config["port"], timeout=5, passwd=config["password"]) as client:
-                            pass
-                        break
+                            break
                     except:
                         sleep(0.05)
 
@@ -193,7 +195,7 @@ class ARK_Server_Manager:
                         elif queue_data.get("thread") == "web":
                             self.web_queue.put(queue_data)
                     elif queue_data["type"] == "chat":
-                        message = f"[{value['name']}]{queue_data['content']}"
+                        message = f"{value['name']}{queue_data['content']}"
                         self.log_queue.put(message)
                         self.discord_queue.put(
                             {
@@ -212,13 +214,16 @@ class ARK_Server_Manager:
                         elif queue_data["content"] == "disconnect":
                             value["rcon"] = False
                 if server_status(value["status"], value["rcon"]) != status:
-                    status = server_status(value["status"], value["rcon"])
+                    new_status = server_status(value["status"], value["rcon"])
                     status_message = ""
-                    if status == True:
-                        status_message = f"[{value['name']}]伺服器已啟動。"
-                    elif status == None:
+                    if new_status == True:
+                        if status == False:
+                            status_message = f"[{value['name']}]伺服器已啟動。"
+                        else:
+                            status_message = f"[{value['name']}]伺服器已重新連線。"
+                    elif new_status == None:
                         status_message = f"[{value['name']}]伺服器無回應。"
-                    elif status == False:
+                    elif new_status == False:
                         status_message = f"[{value['name']}]伺服器已關閉。"
                         while not value["queues"]["request"].empty():
                             value["queues"]["request"].get()
