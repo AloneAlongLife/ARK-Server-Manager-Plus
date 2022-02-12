@@ -69,7 +69,7 @@ class ARK_Server_Manager:
                             for string in [content for content in content_list if content != ""]:
                                 self.log_queue.put(f"{thread_name()}[RCON]{string}")
                                 conv_string = CC.convert(string)
-                                if (not conv_string.startswith(("SERVER:", "管理員指令"))) and ("has entered your zone." not in string): 
+                                if (not conv_string.startswith(("SERVER:", "管理員指令"))) and ("被自動摧毀了！" not in conv_string) and ("has entered your zone." not in string): 
                                     if conv_string.startswith("部落"):
                                         tribe = string[2:string.find(", ID ")]
                                         if string.find("\">") != -1: string = string[string.find("\">") + 2:-4]
