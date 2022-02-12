@@ -52,11 +52,27 @@ class Custom_Client(discord.client.Client):
             self.log_queue.put(f"{thread_name()}Receive Message: {message.content}")
             if message.content.startswith(f"{self.config['prefix']}c") and self.config["admin_role"] in [role.id for role in message.author.roles]:
                 command = message.content[3:]
+                if command.startswith("del "):
+                    command = command[4:]
+                    await message.delete()
                 key = list(self.config["chat_channel"].keys())[list(self.config["chat_channel"].values()).index(message.channel.id)]
                 self.ark_queue.put(
                     {
                         "type": "command",
                         "content": f"{key} {command}",
+                        "thread": "discord",
+                        "user": message.author
+                    }
+                )
+            elif message.content.startswith(f"{self.config['prefix']}m") and self.config["admin_role"] in [role.id for role in message.author.roles]:
+                command = message.content[3:]
+                if command.startswith("del "):
+                    command = command[4:]
+                    await message.delete()
+                self.main.put(
+                    {
+                        "type": "command",
+                        "content": command,
                         "thread": "discord",
                         "user": message.author
                     }

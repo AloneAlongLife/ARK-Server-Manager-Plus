@@ -202,6 +202,8 @@ class ARK_Server_Manager:
             for key in data.keys():
                 value = data[key]
                 status = server_status(value["status"], value["rcon"])
+                if status == None and value["last_status"] == False:
+                    status = False
                 if is_alive(value["path"]) != value["status"]:
                     value["status"] = is_alive(value["path"])
                 if not value["queues"]["response"].empty():
@@ -238,7 +240,7 @@ class ARK_Server_Manager:
                         elif queue_data["content"] == "disconnect":
                             value["rcon"] = False
                 if server_status(value["status"], value["rcon"]) != status:
-                    sleep(10)
+                    sleep(5)
                     if server_status(value["status"], value["rcon"]) != status:
                         value["last_status"] = status
                         last_status = value["last_status"]
