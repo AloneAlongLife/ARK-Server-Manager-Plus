@@ -29,6 +29,7 @@ class Custom_Client(discord.client.Client):
                     channel = self.get_channel(self.config["chat_channel"][queue_data["content"]["key"]])
                     display_name = queue_data["content"]["display_name"]
                     raw_message = queue_data["content"]["message"]
+                    self.log_queue.put(f"{thread_name}Receive Message:{raw_message}")
                     if queue_data["type"] == "message":
                         if " (" in raw_message and "): " in raw_message:
                             user = raw_message[raw_message.find(" (")+2:raw_message.find("): ")]
@@ -42,6 +43,7 @@ class Custom_Client(discord.client.Client):
                     if queue_data["type"] == "admin-message":
                         await channel.send(f"<@&{self.config['admin_role']}>{raw_message}")
                     elif queue_data["type"] == "command-reply":
+                        message = raw_message
                         if message.startswith(f"[{display_name}]"):
                             message = message[len(f"[{display_name}]"):]
                         await queue_data["user"].send(f"[{display_name}]{raw_message}")
