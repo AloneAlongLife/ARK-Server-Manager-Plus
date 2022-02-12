@@ -123,7 +123,26 @@ class ARK_Server_Manager:
         backup_path = join(config["path"], f"ShooterGame{BACKSLASH}Backup{BACKSLASH}SavedArks{BACKSLASH}{config['map_name']}_{self.timestamp()}.ark")
         copyfile(save_path, backup_path)
         if restart:
+            sleep(10)
             system("start cmd /c \"" + join(config['path'], 'ShooterGame\\Saved\\Config\\WindowsServer\\RunServer.cmd') + "\"")
+            key = ""
+            for dict_key in self.config.keys():
+                if config["path"] == abspath(self.config[key]["path"]):
+                    key = dict_key
+                    break
+            status_message = f"[{config['name']}]伺服器已啟動。"
+            self.log_queue.put(f"{thread_name()}{status_message}")
+            self.discord_queue.put(
+                {
+                    "type": "admin-message",
+                    "content": {
+                        "message": status_message,
+                        "key": key,
+                        "display_name": config["name"]
+                    },
+                    "thread": "ark"
+                }
+            )
 
     def run(self):
         ip = get_ip()
@@ -240,7 +259,7 @@ class ARK_Server_Manager:
                         elif queue_data["content"] == "disconnect":
                             value["rcon"] = False
                 if server_status(value["status"], value["rcon"]) != status:
-                    sleep(5)
+                    sleep(3)
                     if server_status(value["status"], value["rcon"]) != status:
                         value["last_status"] = status
                         last_status = value["last_status"]
