@@ -127,7 +127,7 @@ class ARK_Server_Manager:
             self.self_queue.put(
                 {
                     "type": "command",
-                    "content": "start",
+                    "content": f"{config['name']} start",
                     "thread": "ark"
                 }
             )
