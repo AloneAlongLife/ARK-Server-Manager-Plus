@@ -189,7 +189,7 @@ class ARK_Server_Manager:
                                 )
                         elif command.startswith("restart"):
                             try:
-                                r_time = int(command.split(" ")[1])
+                                r_time = abs(int(command.split(" ")[1]))
                             except:
                                 r_time = 5
                             if is_alive(value["path"]) and not value["temp_thread"].is_alive():
@@ -197,7 +197,7 @@ class ARK_Server_Manager:
                                 value["temp_thread"].start()
                         elif command.startswith("stop"):
                             try:
-                                r_time = int(command.split(" ")[1])
+                                r_time = abs(int(command.split(" ")[1]))
                             except:
                                 r_time = 5
                             if is_alive(value["path"]) and not value["temp_thread"].is_alive():
