@@ -187,11 +187,19 @@ class ARK_Server_Manager:
                                         "thread": "ark"
                                     }
                                 )
-                        elif command == "restart":
+                        elif command.startswith("restart"):
+                            try:
+                                r_time = int(command.split(" ")[1])
+                            except:
+                                r_time = 5
                             if is_alive(value["path"]) and not value["temp_thread"].is_alive():
-                                value["temp_thread"] = Thread(target=self.stop, name=f"ARK-temp-thread-{target}", args=(value, target, 5, True))
+                                value["temp_thread"] = Thread(target=self.stop, name=f"ARK-temp-thread-{target}", args=(value, target, r_time, True))
                                 value["temp_thread"].start()
-                        elif command == "stop":
+                        elif command.startswith("stop"):
+                            try:
+                                r_time = int(command.split(" ")[1])
+                            except:
+                                r_time = 5
                             if is_alive(value["path"]) and not value["temp_thread"].is_alive():
                                 value["temp_thread"] = Thread(target=self.stop, name=f"ARK-temp-thread-{target}", args=(value, target, 5, False))
                                 value["temp_thread"].start()
