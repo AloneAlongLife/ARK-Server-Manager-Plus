@@ -124,22 +124,10 @@ class ARK_Server_Manager:
         copyfile(save_path, backup_path)
         if restart:
             sleep(10)
-            system("start cmd /c \"" + join(config['path'], 'ShooterGame\\Saved\\Config\\WindowsServer\\RunServer.cmd') + "\"")
-            key = ""
-            for dict_key in self.config.keys():
-                if config["path"] == abspath(self.config[key]["path"]):
-                    key = dict_key
-                    break
-            status_message = f"[{config['name']}]伺服器已啟動。"
-            self.log_queue.put(f"{thread_name()}{status_message}")
-            self.discord_queue.put(
+            self.self_queue.put(
                 {
-                    "type": "admin-message",
-                    "content": {
-                        "message": status_message,
-                        "key": key,
-                        "display_name": config["name"]
-                    },
+                    "type": "command",
+                    "content": "start",
                     "thread": "ark"
                 }
             )
@@ -186,6 +174,19 @@ class ARK_Server_Manager:
                         if command == "start":
                             if not is_alive(value["path"]) and not value["temp_thread"].is_alive():
                                 system("start cmd /c \"" + join(value['path'], 'ShooterGame\\Saved\\Config\\WindowsServer\\RunServer.cmd') + "\"")
+                                status_message = f"[{value['name']}]伺服器已啟動。"
+                                self.log_queue.put(f"{thread_name()}{status_message}")
+                                self.discord_queue.put(
+                                    {
+                                        "type": "admin-message",
+                                        "content": {
+                                            "message": status_message,
+                                            "key": key,
+                                            "display_name": value["name"]
+                                        },
+                                        "thread": "ark"
+                                    }
+                                )
                         elif command == "restart":
                             if is_alive(value["path"]) and not value["temp_thread"].is_alive():
                                 value["temp_thread"] = Thread(target=self.stop, name=f"ARK-temp-thread-{target}", args=(value, target, 5, True))
@@ -267,7 +268,7 @@ class ARK_Server_Manager:
                         status_message = ""
                         if status == True:
                             if last_status == False:
-                                status_message = f"[{value['name']}]伺服器已啟動。"
+                                status_message = f"[{value['name']}]伺服器已啟動完成。"
                             else:
                                 status_message = f"[{value['name']}]伺服器已重新連線。"
                         elif status == None:
