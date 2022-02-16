@@ -116,18 +116,18 @@ class ARK_Server_Manager:
         config["queues"]["request"].put({"type": "command", "content": "DestroyWildDinos"})
         config["queues"]["request"].put({"type": "command", "content": f"DoExit"})
         while is_alive(config["path"]):
-            sleep(10)
+            sleep(1)
         if not isdir(join(config['path'], 'ShooterGame\\Backup\\SavedArks')):
             makedirs(join(config['path'], 'ShooterGame\\Backup\\SavedArks'))
         save_path = join(config["path"], f"ShooterGame{BACKSLASH}Saved{BACKSLASH}SavedArks{BACKSLASH}{config['map_name']}.ark")
         backup_path = join(config["path"], f"ShooterGame{BACKSLASH}Backup{BACKSLASH}SavedArks{BACKSLASH}{config['map_name']}_{self.timestamp()}.ark")
         copyfile(save_path, backup_path)
         if restart:
-            sleep(10)
+            sleep(5)
             self.self_queue.put(
                 {
                     "type": "command",
-                    "content": f"{config['name']} start",
+                    "content": f"{config['key']} start",
                     "thread": "ark"
                 }
             )
@@ -137,6 +137,7 @@ class ARK_Server_Manager:
         data = {}
         for key in self.config.keys():
             data[key] = {
+                "key": key,
                 "name": self.config[key]["name"],
                 "map_name": self.config[key]["map_name"],
                 "path": abspath(self.config[key]["path"]),
@@ -160,6 +161,7 @@ class ARK_Server_Manager:
             if not self.self_queue.empty():
                 queue_data: dict = self.self_queue.get()
                 if queue_data["type"] == "command":
+                    self.log_queue.put(f"{thread_name()}Receive Command: {queue_data['content']}")
                     target = queue_data["content"].split(" ")[0]
                     if target not in data.keys():
                         for key in data.keys():
@@ -169,7 +171,6 @@ class ARK_Server_Manager:
                                 break
                     if target in data.keys():
                         command = queue_data["content"].replace(f"{target} ", "")
-                        self.log_queue.put(f"{thread_name()}Receive Command: {command}")
                         value = data[target]
                         if command == "start":
                             if not is_alive(value["path"]) and not value["temp_thread"].is_alive():
@@ -201,7 +202,7 @@ class ARK_Server_Manager:
                             except:
                                 r_time = 5
                             if is_alive(value["path"]) and not value["temp_thread"].is_alive():
-                                value["temp_thread"] = Thread(target=self.stop, name=f"ARK-temp-thread-{target}", args=(value, target, 5, False))
+                                value["temp_thread"] = Thread(target=self.stop, name=f"ARK-temp-thread-{target}", args=(value, target, r_time, False))
                                 value["temp_thread"].start()
                         else:
                             queue_data["content"] = command
