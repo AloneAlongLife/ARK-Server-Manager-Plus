@@ -87,19 +87,24 @@ class ARK_Server_Manager:
             except SystemExit:
                 break
             except:
-                response.put(
-                    {
-                        "type": "status",
-                        "content": "disconnect"
-                    }
-                )
-                self.log_queue.put(f"{thread_name()}[RCON]RCON Disconnected.")
-                while True:
-                    try:
-                        with Client(config["ip"], config["port"], timeout=5, passwd=config["password"]) as client:
-                            break
-                    except:
-                        sleep(0.05)
+                sleep(5)
+                try:
+                    with Client(config["ip"], config["port"], timeout=10, passwd=config["password"]) as client:
+                        pass
+                except:
+                    response.put(
+                        {
+                            "type": "status",
+                            "content": "disconnect"
+                        }
+                    )
+                    self.log_queue.put(f"{thread_name()}[RCON]RCON Disconnected.")
+                    while True:
+                        try:
+                            with Client(config["ip"], config["port"], timeout=5, passwd=config["password"]) as client:
+                                break
+                        except:
+                            sleep(0.05)
 
     def timestamp(self):
         return (datetime.utcnow() + self.time_dalta).strftime('%Y_%m_%d %H-%M-%S')
