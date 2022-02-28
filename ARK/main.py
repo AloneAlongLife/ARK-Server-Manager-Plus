@@ -23,7 +23,13 @@ IN_STR = (
     " Souls were destroyed by ",
     " 擊殺!",
     " 已死亡!",
-    " killed!"
+    " killed!",
+    "你的部落 killed ",
+    " killed ，擊殺者：",
+    " 認養了 ",
+    " 摧毀了你的 ",
+    " 拆除了",
+    "你的部落馴養了一隻"
 )
 
 def is_alive(path: str) -> bool:
