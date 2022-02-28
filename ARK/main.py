@@ -12,6 +12,20 @@ from psutil import Process, NoSuchProcess
 BACKSLASH = "\\"
 CC = OpenCC("s2tw")
 
+START_WITH = (
+    "SERVER:",
+    "管理員指令"
+)
+IN_STR = (
+    "被自動摧毀了！",
+    "has entered your zone.",
+    "馴養了 一隻",
+    " Souls were destroyed by ",
+    " 擊殺!",
+    " 已死亡!",
+    " killed!"
+)
+
 def is_alive(path: str) -> bool:
     alive_list = process_info("ShooterGameServer.exe")
     if alive_list != None:
@@ -30,6 +44,14 @@ def server_status(cmd: bool, rcon: bool) -> bool | None:
             return None
     else:
         return False
+
+def remove_message(message: str) -> bool:
+    if message.startswith(START_WITH):
+        return False
+    for test_str in IN_STR:
+        if test_str in message:
+            return False
+    return True
 
 class ARK_Server_Manager:
     def __init__(self, global_setting: dict, config: dict) -> None:
@@ -69,7 +91,7 @@ class ARK_Server_Manager:
                             for string in [content for content in content_list if content != ""]:
                                 self.log_queue.put(f"{thread_name()}[RCON]{string}")
                                 conv_string = CC.convert(string)
-                                if (not conv_string.startswith(("SERVER:", "管理員指令"))) and ("被自動摧毀了！" not in conv_string) and ("has entered your zone." not in string): 
+                                if (remove_message(conv_string)): 
                                     if conv_string.startswith("部落"):
                                         tribe = string[2:string.find(", ID ")]
                                         if string.find("\">") != -1: string = string[string.find("\">") + 2:-4]
