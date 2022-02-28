@@ -209,7 +209,7 @@ class ARK_Server_Manager:
                                         "type": "admin-message",
                                         "content": {
                                             "message": status_message,
-                                            "key": key,
+                                            "key": target,
                                             "display_name": value["name"]
                                         },
                                         "thread": "ark"
