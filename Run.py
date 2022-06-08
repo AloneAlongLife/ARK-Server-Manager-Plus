@@ -61,8 +61,9 @@ def config_reader() -> tuple:
     return file_exist, config
 
 def flask_job(*args, **kargs):
-    web_ui = Dashboard(*args, **kargs)
-    web_ui.run(host="0.0.0.0", port=5001, debug=True)
+    pass
+    # web_ui = Dashboard(*args, **kargs)
+    # web_ui.run(host="0.0.0.0", port=5001, debug=True)
 
 def ark_job(*args, **kargs):
     asm = ARK_Server_Manager(*args, **kargs)
@@ -143,19 +144,56 @@ def auto_restart(before: timedelta=timedelta(minutes=5)) -> bool:
         else:
             result.append(False)
     if True in result:
+        i = 0
         for key in ARK_SERVER.keys():
-            ark_queue.put(
-                {
-                    "type": "command",
-                    "content": f"{key} restart",
-                    "thread": "main"
-                }
-            )
+            if ARK_SERVER[key].get("ect") == None:
+                ark_queue.put(
+                    {
+                        "type": "command",
+                        "content": f"{key} restart {20 * i}",
+                        "thread": "main"
+                    }
+                )
+                i += 1
+            else:
+                ark_queue.put(
+                    {
+                        "type": "command",
+                        "content": f"{key} restart",
+                        "thread": "main"
+                    }
+                )
         return True
     elif None in result:
         return True
-    else:
-        return False
+    result = []
+    for time_data in GLOBAL_CONFIG["save_time"]:
+        start_time = (datetime.strptime(time_data[0], "%H:%M:%S") - before).time()
+        end_time = (datetime.strptime(time_data[1], "%H:%M:%S") - before).time()
+        _now_time = now_time(TIME_DELTA).time()
+
+        if _now_time > start_time and _now_time < end_time and not restarting:
+            result.append(True)
+        elif _now_time > start_time and _now_time < end_time and restarting:
+            result.append(None)
+        else:
+            result.append(False)
+    if True in result:
+        i = 0
+        for key in ARK_SERVER.keys():
+            if ARK_SERVER[key].get("ect") == None:
+                ark_queue.put(
+                    {
+                        "type": "command",
+                        "content": f"{key} save {10 * i}",
+                        "thread": "main"
+                    }
+                )
+                i += 1
+        return True
+    elif None in result:
+        return True
+    return False
 
 if __name__ == "__main__":
     # 檢查是否有Git

@@ -1,3 +1,4 @@
+from glob import glob
 from queue import Queue
 from modules import Thread, get_ip, thread_name, process_info
 from opencc import OpenCC
@@ -21,6 +22,7 @@ IN_STR = (
     "has entered your zone.",
     "馴養了 一隻",
     " Souls were destroyed by ",
+    " Soul was destroyed by ",
     " 擊殺!",
     " 已死亡!",
     " killed!",
@@ -29,8 +31,11 @@ IN_STR = (
     " 認養了 ",
     " 摧毀了你的 ",
     " 拆除了",
+    " 放生了 '",
     "你的部落馴養了一隻"
 )
+
+savedict = {}
 
 def is_alive(path: str) -> bool:
     alive_list = process_info("ShooterGameServer.exe")
@@ -70,6 +75,7 @@ class ARK_Server_Manager:
         self.config = config
 
     def rcon_session(self, config: dict, request: Queue, response: Queue):
+        global savedict
         while True:
             try:
                 with Client(config["ip"], config["port"], timeout=60, passwd=config["password"]) as client:
@@ -88,9 +94,12 @@ class ARK_Server_Manager:
                                 self.log_queue.put(f"{thread_name()}[RCON]Receive Command: {command}")
                                 resp = client.run(command)
                                 self.log_queue.put(f"{thread_name()}[RCON]Command Reply To \"{command}\": {resp}")
-                            data["type"] = "command-reply"
-                            data["content"] = resp
-                            response.put(data)
+                                data["type"] = "command-reply"
+                                data["content"] = resp
+                                response.put(data)
+                                # if data.get("thread") == "save":
+                                #     savedict[config["key"]] = True
+                                #     self.log_queue.put(f"RCON: {savedict}")
                         raw_chat = client.run("GetChat")[:-3]
                         if "Server received, But no response!" not in raw_chat:
                             content_list = raw_chat.split("\n")
@@ -138,24 +147,58 @@ class ARK_Server_Manager:
         return (datetime.utcnow() + self.time_dalta).strftime('%Y_%m_%d %H-%M-%S')
 
     def stop(self, config, server, times=5, restart=False):
+        global savedict
+        if restart == False:
+            restart = 0
+        elif restart == True:
+            restart = 1
+        else:
+            restart = 2
         for i in range(times):
-            message = f"""[{config['name']}]伺服器將於{times-i}分鐘後{['關閉', '重啟'][restart]}。\n[{config['name']}]Server will {['shutdown', 'restart'][restart]} in {times-i} min."""
-            self.discord_queue.put({"type": "message", "content": {"message": message, "key": server, "display_name": config["name"]}, "thread": "ark"})
-            config["queues"]["request"].put({"type": "command", "content": f"Broadcast {message}"})
+            if (times-i <= 5) or (times-i <= 30 and times-i % 5 == 0):
+                message = f"""[{config['name']}]伺服器將於{times-i}分鐘後{['關閉', '重啟', '存檔'][restart]}。\n[{config['name']}]Server will {['shutdown', 'restart', 'save'][restart]} in {times-i} min."""
+                self.discord_queue.put({"type": "message", "content": {"message": message, "key": server, "display_name": config["name"]}, "thread": "ark"})
+                config["queues"]["request"].put({"type": "command", "content": f"Broadcast {message}"})
             sleep(60)
         message = f"[{config['name']}]儲存中...\n[{config['name']}]Saving..."
         self.discord_queue.put({"type": "message", "content": {"message": message, "key": server, "display_name": config["name"]}, "thread": "ark"})
         config["queues"]["request"].put({"type": "command", "content": f"Broadcast {message}"})
-        config["queues"]["request"].put({"type": "command", "content": "DestroyWildDinos"})
-        config["queues"]["request"].put({"type": "command", "content": f"DoExit"})
-        while is_alive(config["path"]):
-            sleep(1)
+        with open("classlist") as class_file:
+            class_list = class_file.read().split("\n")
+        # config["queues"]["request"].put({"type": "command", "content": "Slomo 0.1"})
+        class_list_2 = []
+        for classname in class_list:
+            if classname not in class_list_2:
+                class_list_2.append(classname)
+                config["queues"]["request"].put({"type": "command", "content": f"DestroyWildDinoClasses \"{classname}\" 1"})
+        class_list_2.sort()
+        with open("classlist", mode="w", encoding="utf-8") as class_file:
+            class_file.write("\n".join(class_list_2))
+            class_file.close()
+        if restart != 2:
+            config["queues"]["request"].put({"type": "command", "content": "DestroyWildDinos"})
+        # config["queues"]["request"].put({"type": "command", "content": "Slomo 1"})
+        config["queues"]["request"].put({"type": "command", "content": "SaveWorld", "thread": "save"})
+        saved_count = 0
+        # while not savedict[server]:
+        #     print(f"Save: {savedict}")
+        #     sleep(1)
+        #     saved_count += 1
+        #     if saved_count > 3600:
+        #         self.discord_queue.put({"type": "admin-message", "content": {"message": "儲存失敗。", "key": server, "display_name": config["name"]}, "thread": "ark"})
+        #         return
+        if restart == 2:
+            sleep(360)
+        else:
+            config["queues"]["request"].put({"type": "command", "content": "DoExit"})
+            while is_alive(config["path"]):
+                sleep(1)
         if not isdir(join(config['path'], 'ShooterGame\\Backup\\SavedArks')):
             makedirs(join(config['path'], 'ShooterGame\\Backup\\SavedArks'))
         save_path = join(config["path"], f"ShooterGame{BACKSLASH}Saved{BACKSLASH}SavedArks{BACKSLASH}{config['map_name']}.ark")
         backup_path = join(config["path"], f"ShooterGame{BACKSLASH}Backup{BACKSLASH}SavedArks{BACKSLASH}{config['map_name']}_{self.timestamp()}.ark")
         copyfile(save_path, backup_path)
-        if restart:
+        if restart == 1:
             sleep(5)
             self.self_queue.put(
                 {
@@ -164,8 +207,11 @@ class ARK_Server_Manager:
                     "thread": "ark"
                 }
             )
+        elif restart == 2:
+            self.discord_queue.put({"type": "message", "content": {"message": "儲存完成。", "key": server, "display_name": config["name"]}, "thread": "ark"})
 
     def run(self):
+        global savedict
         ip = get_ip()
         data = {}
         for key in self.config.keys():
@@ -186,7 +232,7 @@ class ARK_Server_Manager:
                 "status": False,
                 "rcon": False,
                 "last_status": False,
-                "temp_thread": Thread()
+                "temp_thread": Thread(),
             }
             data[key]["thread"] = Thread(target=self.rcon_session, name=data[key]["name"], args=(data[key]["config"], data[key]["queues"]["request"], data[key]["queues"]["response"]))
             data[key]["thread"].start()
@@ -205,6 +251,8 @@ class ARK_Server_Manager:
                     if target in data.keys():
                         command = queue_data["content"].replace(f"{target} ", "")
                         value = data[target]
+                        if value["temp_thread"].is_alive():
+                            value["temp_thread"].join(5)
                         if command == "start":
                             if not is_alive(value["path"]) and not value["temp_thread"].is_alive():
                                 system("start cmd /c \"" + join(value['path'], 'ShooterGame\\Saved\\Config\\WindowsServer\\RunServer.cmd') + "\"")
@@ -227,6 +275,7 @@ class ARK_Server_Manager:
                             except:
                                 r_time = 5
                             if is_alive(value["path"]) and not value["temp_thread"].is_alive():
+                                savedict[target] = False
                                 value["temp_thread"] = Thread(target=self.stop, name=f"ARK-temp-thread-{target}", args=(value, target, r_time, True))
                                 value["temp_thread"].start()
                         elif command.startswith("stop"):
@@ -235,7 +284,17 @@ class ARK_Server_Manager:
                             except:
                                 r_time = 5
                             if is_alive(value["path"]) and not value["temp_thread"].is_alive():
+                                savedict[target] = False
                                 value["temp_thread"] = Thread(target=self.stop, name=f"ARK-temp-thread-{target}", args=(value, target, r_time, False))
+                                value["temp_thread"].start()
+                        elif command.startswith("save") and not command.startswith("saveworld"):
+                            try:
+                                r_time = abs(int(command.split(" ")[1]))
+                            except:
+                                r_time = 5
+                            if is_alive(value["path"]) and not value["temp_thread"].is_alive():
+                                savedict[target] = False
+                                value["temp_thread"] = Thread(target=self.stop, name=f"ARK-temp-thread-{target}", args=(value, target, r_time, None))
                                 value["temp_thread"].start()
                         else:
                             queue_data["content"] = command

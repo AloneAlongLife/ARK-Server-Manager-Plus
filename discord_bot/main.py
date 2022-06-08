@@ -79,10 +79,19 @@ class Custom_Client(discord.client.Client):
                         "user": message.author
                     }
                 )
-            # else:
-            #     resp = f"[Discord][{message.author.display_name}]:{message.content}"
-            #     print(resp)
-            #     in_queue.put(resp)
+            elif self.config["admin_role"] in [role.id for role in message.author.roles]:
+                if command.startswith(f"{self.config['prefix']}del "):
+                    command = command[5:]
+                    await message.delete()
+                key = list(self.config["chat_channel"].keys())[list(self.config["chat_channel"].values()).index(message.channel.id)]
+                self.ark_queue.put(
+                    {
+                        "type": "command",
+                        "content": f"{key} Broadcast {command}",
+                        "thread": "discord",
+                        "user": message.author
+                    }
+                )
     
     def run(self, *args, **kwargs):
         return super().run(self.config["token"], *args, **kwargs)
